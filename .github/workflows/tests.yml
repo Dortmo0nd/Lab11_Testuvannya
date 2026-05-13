@@ -1,0 +1,31 @@
+name: UI Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest # Віртуальний сервер на Linux
+
+    steps:
+    - uses: actions/checkout@v4 # Отримує ваш код
+    - uses: actions/setup-python@v5 # Встановлює Python
+      with:
+        python-version: '3.10'
+
+    - name: Install deps
+      run: pip install -r requirements.txt # Встановлює Selenium та Pytest
+
+    - name: Install Chrome
+      uses: browser-actions/setup-chrome@v1 # Встановлює Chrome для headless-запуску
+
+    - name: Run tests
+      run: pytest # Запускає сам тест
+
+    - name: Upload Allure results
+      uses: actions/upload-artifact@v4 # Зберігає звіти на GitHub
+      with:
+        name: allure-results
+        path: allure-results
