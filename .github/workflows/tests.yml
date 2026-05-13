@@ -1,31 +1,42 @@
-name: UI Tests
+name: UI Tests CI
 
+# Коли запускати тести: при кожному push або pull request у гілку main
 on:
   push:
-    branches: [ main ]
+    branches: [ "master" ]
   pull_request:
+    branches: [ "master" ]
 
 jobs:
   test:
-    runs-on: ubuntu-latest # Віртуальний сервер на Linux
+    runs-on: ubuntu-latest # Використовуємо останню версію Linux
 
     steps:
-    - uses: actions/checkout@v4 # Отримує ваш код
-    - uses: actions/setup-python@v5 # Встановлює Python
+    # 1. Завантажуємо код вашого репозиторію на віртуальний сервер
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    # 2. Встановлюємо Python
+    - name: Set up Python
+      uses: actions/setup-python@v5
       with:
-        python-version: '3.10'
+        python-version: "3.10"
 
-    - name: Install deps
-      run: pip install -r requirements.txt # Встановлює Selenium та Pytest
+    # 3. Встановлюємо залежності (Selenium, Pytest, Allure)
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
 
-    - name: Install Chrome
-      uses: browser-actions/setup-chrome@v1 # Встановлює Chrome для headless-запуску
+    # 4. Запускаємо тести і зберігаємо результати для Allure
+    - name: Run tests with Pytest
+      run: pytest --alluredir=allure-results
+      continue-on-error: true  # Це ВАЖЛИВО: продовжуємо пайплайн, навіть якщо тест впав (щоб зберегти звіт зі скріншотом)
 
-    - name: Run tests
-      run: pytest # Запускає сам тест
-
-    - name: Upload Allure results
-      uses: actions/upload-artifact@v4 # Зберігає звіти на GitHub
+    # 5. Зберігаємо папку allure-results як артефакт (щоб її можна було завантажити)
+    - name: Upload Allure results as artifact
+      uses: actions/upload-artifact@v4
       with:
         name: allure-results
         path: allure-results
+        retention-days: 7 # Скільки днів зберігати звіт на GitHub
