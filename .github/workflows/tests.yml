@@ -1,42 +1,40 @@
 name: UI Tests CI
 
-# Коли запускати тести: при кожному push або pull request у гілку main
+# Змінили main на master
 on:
   push:
     branches: [ "master" ]
   pull_request:
     branches: [ "master" ]
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   test:
-    runs-on: ubuntu-latest # Використовуємо останню версію Linux
+    runs-on: ubuntu-latest
 
     steps:
-    # 1. Завантажуємо код вашого репозиторію на віртуальний сервер
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    # 2. Встановлюємо Python
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
         python-version: "3.10"
 
-    # 3. Встановлюємо залежності (Selenium, Pytest, Allure)
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
+        pip install pytest selenium allure-pytest
 
-    # 4. Запускаємо тести і зберігаємо результати для Allure
     - name: Run tests with Pytest
       run: pytest --alluredir=allure-results
-      continue-on-error: true  # Це ВАЖЛИВО: продовжуємо пайплайн, навіть якщо тест впав (щоб зберегти звіт зі скріншотом)
+      continue-on-error: true
 
-    # 5. Зберігаємо папку allure-results як артефакт (щоб її можна було завантажити)
     - name: Upload Allure results as artifact
       uses: actions/upload-artifact@v4
       with:
         name: allure-results
         path: allure-results
-        retention-days: 7 # Скільки днів зберігати звіт на GitHub
+        retention-days: 7
